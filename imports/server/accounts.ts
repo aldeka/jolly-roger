@@ -81,8 +81,7 @@ Accounts.onLoginFailure((info: LoginInfo) => {
 Accounts.urls.enrollAccount = (token) => Meteor.absoluteUrl(`enroll/${token}`);
 Accounts.urls.resetPassword = (token) => Meteor.absoluteUrl(`reset-password/${token}`);
 
-// Set from address to our domain - something like operators@deathandmayhem.com
-Accounts.emailTemplates.from = `operators@${new URL(Meteor.absoluteUrl('')).hostname}`;
+Accounts.emailTemplates.from = 'jollyroger@aldeka.net';
 Accounts.emailTemplates.enrollAccount.subject = () => {
   return `[jolly-roger] You're invited to ${Accounts.emailTemplates.siteName}`;
 };
@@ -103,11 +102,11 @@ Accounts.emailTemplates.enrollAccount.text = (user, url: string) => {
     `${huntLists.join(', ')}\n` +
     '\n';
 
-  return 'Hiya!\n' +
+  return 'Hi!\n' +
     '\n' +
-    'Someone on Death and Mayhem has invited you to join our internal team website and ' +
-    `virtual headquarters, ${Accounts.emailTemplates.siteName}, so that you can join us for the ` +
-    'MIT Mystery Hunt.\n' +
+    'Someone on Rage has invited you to join our internal team website and ' +
+    `virtual headquarters, ${Accounts.emailTemplates.siteName}, so that you can join us for ` +
+    'a puzzle hunt.\n' +
     '\n' +
     'To create your account, simply click the link below, fill out a few details for us, and ' +
     'click "Register".\n' +
@@ -119,8 +118,7 @@ Accounts.emailTemplates.enrollAccount.text = (user, url: string) => {
     'After you\'ve registered your account, you can keep it permanently. We\'ll use it if you ' +
     'hunt with us again.\n' +
     '\n' +
-    'The site itself is under pretty active construction, so expect quite a few changes in the ' +
-    'next few days, but let us know if you run into any major bugs at dfa-web@mit.edu.\n' +
+    'The site itself is under construction. Let us know if you run into any major bugs at aldeka@aldeka.net.\n' +
     '\n' +
     'Happy Puzzling,\n' +
     '- The Jolly Roger Web Team\n' +

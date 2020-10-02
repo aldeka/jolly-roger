@@ -199,7 +199,7 @@ class AccountForm extends React.Component<AccountFormProps, AccountFormState> {
     const submitting = this.state.submitState === AccountFormSubmitState.SUBMITTING;
     const format = this.props.format || AccountFormFormat.LOGIN;
     const title = {
-      [AccountFormFormat.LOGIN]: 'Jolly Roger: Death and Mayhem Virtual HQ',
+      [AccountFormFormat.LOGIN]: 'Jolly Roger: Rage Virtual HQ',
       [AccountFormFormat.ENROLL]: 'Create an Account',
       [AccountFormFormat.REQUEST_PW_RESET]: 'Reset your password',
       [AccountFormFormat.RESET_PWD]: 'Reset your password',

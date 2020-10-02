@@ -36,10 +36,12 @@ Meteor.methods({
     Roles.checkPermission(this.userId, 'gdrive.credential');
 
     const credential = Google.retrieveCredential(key, secret);
+    console.log(credential.serviceData);
     const { refreshToken, email } = credential.serviceData;
     Ansible.log('Updating Gdrive creds', {
       email,
       user: this.userId,
+      refreshToken,
     });
     Settings.upsert({ name: 'gdrive.credential' },
       { $set: { value: { refreshToken, email } } });

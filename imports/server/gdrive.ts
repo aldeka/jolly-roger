@@ -96,7 +96,7 @@ export function ensureDocument(puzzle: {
           puzzle: puzzle._id,
         });
 
-        const googleDocId = createDocument(`${puzzle.title}: Death and Mayhem`, type);
+        const googleDocId = createDocument(`${puzzle.title}: Rage`, type);
         const newDoc = {
           hunt: puzzle.hunt,
           puzzle: puzzle._id,

@@ -80,7 +80,7 @@ class AppNavbar extends React.Component<AppNavbarProps> {
                 <RRBS.LinkContainer to={`/users/${this.props.userId}`}>
                   <DropdownItem eventKey="1">My Profile</DropdownItem>
                 </RRBS.LinkContainer>
-                <DropdownItem eventKey="2" href="mailto:dfa-web@mit.edu">
+                <DropdownItem eventKey="2" href="mailto:aldeka@aldeka.net">
                   Report an issue
                 </DropdownItem>
                 <DropdownItem eventKey="3" onSelect={this.logout}>Sign out</DropdownItem>

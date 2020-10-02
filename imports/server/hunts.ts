@@ -17,17 +17,21 @@ const existingJoinEmail = (user: Meteor.User | null, hunt: HuntType, joinerName:
     `${hunt.mailingLists.join(', ')}\n` +
     '\n';
 
-  return 'Hiya!\n' +
+  return 'Hi!\n' +
     '\n' +
-    'You\'ve been added to to a new hunt on Death and Mayhem\'s virtual headquarters ' +
-    `${Accounts.emailTemplates.siteName}${joinerName ? ` by ${joinerName}` : ''}, so that you ` +
-    'can join us for the MIT Mystery Hunt.\n' +
+    'Karen or someone close to her has invited you to join our puzzlehunting website.\n' +
     '\n' +
-    `You've been added to this hunt: ${hunt.name}\n` +
+    'To create your account, simply click the link below, fill out a few details for us, and ' +
+    'click "Register".\n' +
     '\n' +
-    `${hunt.mailingLists.length !== 0 ? huntExcerpt : ''}` +
-    'The site itself is under pretty active construction, so expect quite a few changes in the ' +
-    'next few days, but let us know if you run into any major bugs at dfa-web@mit.edu.\n' +
+    `${url}\n` +
+    '\n' +
+    `${huntNames.length !== 0 ? huntExcerpt : ''}` +
+    `${huntLists.length !== 0 ? listExcerpt : ''}` +
+    'After you\'ve registered your account, you can keep it permanently. We\'ll use it if you ' +
+    'hunt with us again.\n' +
+    '\n' +
+    'Let us know if you run into any major bugs at aldeka@aldeka.net.\n' +
     '\n' +
     'Happy Puzzling,\n' +
     '- The Jolly Roger Web Team\n' +
@@ -90,12 +94,12 @@ Meteor.methods({
       const joinerName = joinerProfile && joinerProfile.displayName !== '' ?
         joinerProfile.displayName :
         null;
-      Email.send({
-        from: Accounts.emailTemplates.from,
-        to: email,
-        subject: `[jolly-roger] Added to ${hunt.name} on ${Accounts.emailTemplates.siteName}`,
-        text: existingJoinEmail(joineeUser, hunt, joinerName),
-      });
+      //      Email.send({
+      //        from: Accounts.emailTemplates.from,
+      //        to: email,
+      //        subject: `[jolly-roger] Added to ${hunt.name} on ${Accounts.emailTemplates.siteName}`,
+      //        text: existingJoinEmail(joineeUser, hunt, joinerName),
+      //      });
     }
   },
 });
