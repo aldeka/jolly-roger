@@ -8,7 +8,7 @@ import classnames from 'classnames';
 import DOMPurify from 'dompurify';
 import marked from 'marked';
 import moment from 'moment';
-import React from 'react';
+import React, { ReactChild } from 'react';
 import Alert from 'react-bootstrap/Alert';
 import Button from 'react-bootstrap/Button';
 import Col from 'react-bootstrap/Col';
@@ -41,6 +41,7 @@ import { DocumentType } from '../../lib/schemas/documents';
 import { GuessType } from '../../lib/schemas/guess';
 import { PuzzleType } from '../../lib/schemas/puzzles';
 import { TagType } from '../../lib/schemas/tags';
+import useInterval from '../hooks/useInterval';
 import { Subscribers, SubscriberCounters } from '../subscribers';
 import DocumentDisplay from './Documents';
 import ModalForm from './ModalForm';
@@ -138,6 +139,7 @@ const DefaultChatHeightFraction = 0.6;
 interface ViewerSubscriber {
   user: string;
   name: string;
+  tabId?: string;
 }
 
 interface ViewersListProps {
@@ -493,6 +495,237 @@ class ChatInput extends React.PureComponent<ChatInputProps, ChatInputState> {
   }
 }
 
+enum WebRTCConnectionState {
+  New = 'new',
+  Connecting = 'connecting',
+  Connected = 'connected',
+  Disconnected = 'disconnected',
+  Failed = 'failed',
+  Closed ='closed',
+}
+
+interface WebRTCSubscriber extends ViewerSubscriber {
+  connectionState: WebRTCConnectionState;
+  getVolumeBars: () => number[];
+}
+
+interface PersonBoxProps {
+  user: string;
+  name: string;
+  titleText?: string;
+  tabId?: string;
+  children?: ReactChild;
+}
+
+const PersonBox = ({
+  user, name, titleText, children,
+}: PersonBoxProps) => (
+  <div key={`viewer-${user}`} title={titleText || name} className="people-item">
+    <span className="initial">{name.slice(0, 1)}</span>
+    { children }
+  </div>
+);
+
+interface WebRTCPersonBoxProps extends PersonBoxProps, WebRTCSubscriber {
+}
+
+const WebRTCPersonBox = ({
+  user, name, connectionState, getVolumeBars,
+}: WebRTCPersonBoxProps) => {
+  const [volumeBars, setVolumeBars] = React.useState([]);
+  useInterval(() => {
+    setVolumeBars(getVolumeBars());
+  }, 16);
+  return (
+    <PersonBox
+      user={user}
+      name={name}
+      titleText={`${name}${connectionState !== WebRTCConnectionState.Connected ? ` / connection: ${connectionState}` : ''}`}
+    >
+      <div className="webrtc">
+        <span className={`connection ${connectionState}`} />
+        <svg className="speaker-volume">
+          {
+            volumeBars.map((bar, i) => {
+              const width = 100 / volumeBars.length;
+              const buffer = 100 / (8 * volumeBars.length);
+              return (
+                <rect
+                  key={`bar-${bar}-${i}`}
+                  x={`${width * i + buffer}%`}
+                  y={`${100 - bar}%`}
+                  width={`${width - 2 * buffer}%`}
+                  height={`${bar}%`}
+                />
+              );
+            })
+          }
+        </svg>
+      </div>
+    </PersonBox>
+  );
+};
+
+interface ChatPeopleListProps {
+  people: ViewerSubscriber[];
+  isWebRTC?: boolean;
+}
+
+const ChatPeopleList = ({ people, isWebRTC }: ChatPeopleListProps) => (
+  <div className="people-list">
+    { people.map((person) => (
+      isWebRTC ? (
+        <WebRTCPersonBox key={`person-${person.user}-${person.tabId}`} {...person} />
+      ) : (
+        <PersonBox key={`person-${person.user}-${person.tabId}`} {...person} />
+      )
+    ))}
+  </div>
+);
+
+const fakeRTCers: WebRTCSubscriber[] = [{
+  user: 'abc',
+  name: 'Terry',
+  connectionState: WebRTCConnectionState.Connected,
+  getVolumeBars: () => [100, 60, 24, 10, 5],
+},
+{
+  user: 'def',
+  name: 'Alyssa',
+  connectionState: WebRTCConnectionState.Connecting,
+  getVolumeBars: () => [],
+},
+{
+  user: 'ghi',
+  name: 'Radia',
+  connectionState: WebRTCConnectionState.Disconnected,
+  getVolumeBars: () => [],
+},
+{
+  user: 'jkl',
+  name: 'Alyssa',
+  connectionState: WebRTCConnectionState.Failed,
+  getVolumeBars: () => [],
+},
+{
+  user: 'mno',
+  name: 'Skeleton Jack',
+  connectionState: WebRTCConnectionState.Closed,
+  getVolumeBars: () => [],
+},
+{
+  user: 'pqr',
+  name: 'Quinceman',
+  connectionState: WebRTCConnectionState.Connected,
+  getVolumeBars: () => [50, 65, 69, 32, 10],
+},
+{
+  user: 'stu',
+  name: 'Disco Stu',
+  connectionState: WebRTCConnectionState.Connected,
+  getVolumeBars: () => [50, 60, 100, 80, 90],
+},
+{
+  user: 'vw',
+  name: 'Jetta',
+  connectionState: WebRTCConnectionState.Connected,
+  getVolumeBars: () => [80, 60, 45, 15, 6],
+},
+{
+  user: 'xyz',
+  name: 'Zooko',
+  connectionState: WebRTCConnectionState.New,
+  getVolumeBars: () => [],
+}];
+
+interface ChatPeopleProps {
+  name: string;
+  ready: boolean;
+  viewers: ViewerSubscriber[];
+  RTCers?: WebRTCSubscriber[];
+  showAV?: boolean;
+  unknown: number;
+}
+
+const ChatPeople = ({
+  ready, viewers, RTCers, showAV, unknown,
+}: ChatPeopleProps) => {
+  const [joined, setJoined] = React.useState(false);
+  const [muted, setMuted] = React.useState(false);
+
+  if (!ready) {
+    return null;
+  }
+  const activeRTCers: WebRTCSubscriber[] = RTCers || fakeRTCers;
+  const totalViewers = viewers.length + unknown;
+  return (
+    <section className="chatter-section">
+      <div className="chatter-subsection non-av-viewers">
+        <header>
+          {`${totalViewers} viewer${totalViewers !== 1 ? 's' : ''}`}
+        </header>
+        <ChatPeopleList people={viewers} />
+      </div>
+      {showAV && (
+        <div className="chatter-subsection av-chatters">
+          <header>
+            {`${activeRTCers.length} caller${activeRTCers.length !== 1 ? 's' : ''}`}
+          </header>
+          <ChatPeopleList people={activeRTCers} isWebRTC />
+          <div className="av-actions">
+            {joined ? (
+              <>
+                <Button
+                  className={muted ? 'btn-secondary' : 'btn-light'}
+                  onClick={() => setMuted(!muted)}
+                >
+                  mute
+                  {muted && 'd'}
+                </Button>
+                <Button className="btn-danger" onClick={() => setJoined(false)}>leave</Button>
+              </>
+            ) : (
+              <Button className="btn-primary" onClick={() => setJoined(true)}>join</Button>
+            )}
+          </div>
+        </div>
+      )}
+    </section>
+  );
+};
+
+const ChatPeopleContainer = withTracker(({ name }: { name: string }) => {
+  // Don't want this subscription persisting longer than necessary
+  const subscribersHandle = Meteor.subscribe('subscribers.fetch', name);
+  const profilesHandle = Profiles.subscribeDisplayNames();
+
+  const ready = subscribersHandle.ready() && profilesHandle.ready();
+  if (!ready) {
+    return { ready: ready as boolean, unknown: 0, viewers: [] };
+  }
+
+  let unknown = 0;
+  const viewers: ViewerSubscriber[] = [];
+
+  // eslint-disable-next-line no-restricted-globals
+  Subscribers.find({ name }).forEach((s) => {
+    if (!s.user) {
+      unknown += 1;
+      return;
+    }
+
+    const profile = Profiles.findOne(s.user);
+    if (!profile || !profile.displayName) {
+      unknown += 1;
+      return;
+    }
+
+    viewers.push({ user: s.user, name: profile.displayName });
+  });
+
+  return { ready: ready as boolean, unknown, viewers };
+})(ChatPeople);
+
 interface ChatSectionProps {
   chatReady: boolean;
   chatMessages: FilteredChatMessageType[];
@@ -520,6 +753,7 @@ class ChatSection extends React.PureComponent<ChatSectionProps> {
     return (
       <div className="chat-section">
         {this.props.chatReady ? null : <span>loading...</span>}
+        <ChatPeopleContainer name={`puzzle:${this.props.puzzleId}`} showAV />
         <ChatHistory ref={this.historyRef} chatMessages={this.props.chatMessages} displayNames={this.props.displayNames} />
         <ChatInput
           puzzleId={this.props.puzzleId}
