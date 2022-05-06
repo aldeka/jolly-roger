@@ -41,7 +41,7 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
     - name: Build and test Docker image
       id: build
-      uses: docker/build-push-action@v2
+      uses: docker/build-push-action@v3
       with:
         context: .
         push: ${{ github.ref == 'refs/heads/main' }} # only push on main builds
