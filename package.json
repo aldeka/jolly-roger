@@ -84,7 +84,7 @@
     "@types/mime-types": "^2.1.1",
     "@types/mocha": "^10.0.1",
     "@types/mustache": "^4.2.2",
-    "@types/node": "^14.18.34",
+    "@types/node": "^18.14.2",
     "@types/portscanner": "^2.1.1",
     "@types/react": "^18.0.26",
     "@types/react-copy-to-clipboard": "^5.0.4",
